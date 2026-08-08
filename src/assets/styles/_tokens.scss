@@ -1,0 +1,37 @@
+// Color tokens
+$color-bg: #f5e8d5;
+$color-board-bg: #e8340a;
+$color-card-bg: #fffff8;
+$color-card-border: #d4c8a8;
+$color-card-shadow: rgba(0, 0, 0, 0.25);
+$color-text-primary: #2a1a0a;
+$color-text-placeholder: #b0a088;
+$color-accent-yellow: #f5c842;
+$color-accent-blue: #3ab4f2;
+$color-accent-green: #4ecb71;
+$color-accent-pink: #f27bb0;
+$color-accent-orange: #f5843a;
+$color-strikethrough: #4a4a4a;
+$color-cell-crossed: rgba(74, 74, 74, 0.15);
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Border radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 18px;
+$radius-xl: 24px;
+
+// Typography
+$font-hand: 'Caveat', cursive;
+$font-ui: 'Nunito', sans-serif;
+
+// Transitions
+$transition-fast: 0.15s ease;
+$transition-med: 0.3s ease;
+$transition-slow: 0.5s ease;
