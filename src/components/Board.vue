@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { Star, RotateCcw, Check, Trophy, Move, Send, Palette } from 'lucide-vue-next';
+import { Star, RotateCcw, Check, Trophy, Move, Send, Palette, Flag } from 'lucide-vue-next';
 import ConfirmModal from './ConfirmModal.vue';
 import ColorSelectModal, { type ThemeOption } from './ColorSelectModal.vue';
 
@@ -78,6 +78,9 @@ const stars = ref<boolean[]>(Array(9).fill(false));
 // Answer lock state: when false, word inputs are editable but marking (circle, x, star) is disabled
 const isSubmitted = ref<boolean>(false);
 
+// Game Over state: when activeRound >= 3 (after Round 3 is recorded)
+const isGameOver = computed(() => activeRound.value >= 3);
+
 // Row point values top-to-bottom: Row 1 = 3, Row 2 = 2, Row 3 = 1
 const rowPoints = [3, 2, 1];
 // Col point values left-to-right: Col 1 = 1, Col 2 = 2, Col 3 = 3
@@ -109,12 +112,12 @@ onMounted(() => {
       if (parsed.rounds) rounds.value = parsed.rounds;
       if (parsed.activeRound !== undefined) activeRound.value = parsed.activeRound;
       if (parsed.currentThemeId) currentThemeId.value = parsed.currentThemeId;
-      showColorSelectModal.value = false; // Existing game restored, no color popup
+      showColorSelectModal.value = false;
     } catch (e) {
       showColorSelectModal.value = true;
     }
   } else {
-    showColorSelectModal.value = true; // First time load
+    showColorSelectModal.value = true;
   }
 });
 
@@ -183,8 +186,8 @@ const finalScore = computed(() => {
 });
 
 function cycleMark(i: number) {
-  // Only allow marking if answers have been submitted
-  if (!isSubmitted.value) return;
+  // Disallow marking if game is over or answers not submitted
+  if (isGameOver.value || !isSubmitted.value) return;
 
   const current = marks.value[i];
   // Cycle: None -> Circle -> Cross -> None
@@ -198,15 +201,15 @@ function cycleMark(i: number) {
 
 function toggleStar(i: number, e: Event) {
   e.stopPropagation();
-  // Only allow star toggle if submitted and card is marked as circle ('correct')
-  if (isSubmitted.value && marks.value[i] === 'correct') {
+  // Disallow star toggle if game is over, not submitted, or not marked as circle
+  if (!isGameOver.value && isSubmitted.value && marks.value[i] === 'correct') {
     stars.value[i] = !stars.value[i];
   }
 }
 
 // Submit Answers logic
 function promptSubmit() {
-  if (isSubmitted.value) return;
+  if (isGameOver.value || isSubmitted.value) return;
   showSubmitModal.value = true;
 }
 
@@ -217,19 +220,27 @@ function confirmSubmit() {
 
 // Request next round (triggers pop-up)
 function promptRecordRound() {
-  if (activeRound.value > 2 || !isSubmitted.value) return;
+  if (isGameOver.value || !isSubmitted.value) return;
   showNextRoundModal.value = true;
 }
 
 // Confirm next round
 function confirmRecordRound() {
   showNextRoundModal.value = false;
-  if (activeRound.value > 2) return;
+  if (isGameOver.value) return;
+
   rounds.value[activeRound.value] = totals.value.live;
-  activeRound.value = Math.min(activeRound.value + 1, 3);
-  marks.value = Array(9).fill('none');
-  stars.value = Array(9).fill(false);
-  isSubmitted.value = false; // Reset lock state for the new round
+  activeRound.value = activeRound.value + 1;
+
+  if (activeRound.value >= 3) {
+    // Game Over after Round 3: keep final board state locked
+    isSubmitted.value = true;
+  } else {
+    // Round 1 & 2: reset marks/answers lock for next round
+    marks.value = Array(9).fill('none');
+    stars.value = Array(9).fill(false);
+    isSubmitted.value = false;
+  }
 }
 
 // Request reset (triggers pop-up)
@@ -319,7 +330,7 @@ function confirmTheme() {
                   class="word-card-btn"
                   :class="[
                     marks[r * 3 + c] === 'correct' ? 'card-correct' : marks[r * 3 + c] === 'wrong' ? 'card-wrong' : 'card-none',
-                    { 'card-clickable': isSubmitted }
+                    { 'card-clickable': isSubmitted && !isGameOver }
                   ]"
                   @click="cycleMark(r * 3 + c)"
                 >
@@ -337,15 +348,15 @@ function confirmTheme() {
                     <line x1="186" y1="16" x2="16" y2="86" stroke="#E5484D" stroke-width="7" stroke-linecap="round" />
                   </svg>
                   
-                  <!-- Typing State: Textarea -->
+                  <!-- Typing State: Textarea (Only when NOT submitted and game NOT over) -->
                   <textarea
-                    v-if="!isSubmitted"
+                    v-if="!isSubmitted && !isGameOver"
                     v-model="words[r * 3 + c]"
                     placeholder="Type word..."
                     rows="2"
                     class="word-input"
                   />
-                  <!-- Submitted State: Rendered Display (No placeholder) -->
+                  <!-- Submitted or Game Over State: Rendered Display -->
                   <div v-else class="submitted-word-display">
                     {{ words[r * 3 + c] }}
                   </div>
@@ -356,9 +367,9 @@ function confirmTheme() {
                   class="star-btn"
                   :class="{ 
                     'star-active': stars[r * 3 + c],
-                    'star-disabled': !isSubmitted || marks[r * 3 + c] !== 'correct'
+                    'star-disabled': isGameOver || !isSubmitted || marks[r * 3 + c] !== 'correct'
                   }"
-                  :disabled="!isSubmitted || marks[r * 3 + c] !== 'correct'"
+                  :disabled="isGameOver || !isSubmitted || marks[r * 3 + c] !== 'correct'"
                   @click="toggleStar(r * 3 + c, $event)"
                   title="Star Bonus (+2 pts - requires Circle)"
                 >
@@ -438,9 +449,9 @@ function confirmTheme() {
           <div class="section-label">Current Round</div>
           <div class="live-score-box">{{ totals.live }}</div>
 
-          <!-- Submit Answers Button -->
+          <!-- Submit Answers Button (Active during typing phase of Rounds 1, 2, 3) -->
           <button
-            v-if="!isSubmitted"
+            v-if="!isSubmitted && !isGameOver"
             class="action-btn submit-btn"
             @click="promptSubmit"
           >
@@ -448,16 +459,21 @@ function confirmTheme() {
             <span>Submit Answers</span>
           </button>
 
-          <!-- Record & Next Round Button (Enabled after submission) -->
+          <!-- Record & Next Round Button (Active after submission in Rounds 1, 2, 3) -->
           <button
-            v-else
+            v-else-if="!isGameOver"
             class="action-btn record-btn"
-            :disabled="activeRound > 2"
             @click="promptRecordRound"
           >
             <Check :size="16" />
-            <span>{{ activeRound > 2 ? "All Rounds Recorded" : `Record Round ${activeRound + 1}` }}</span>
+            <span>Record Round {{ activeRound + 1 }}</span>
           </button>
+
+          <!-- Game Over Badge (Replaces submit/record button after Round 3) -->
+          <div v-else class="action-btn game-over-btn">
+            <Flag :size="16" />
+            <span>Game Over!</span>
+          </div>
 
           <!-- Rounds History -->
           <div class="rounds-history">
@@ -702,7 +718,7 @@ $ink: #2B1B3D;
 .word-card-btn {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1; // Always lock strict 1:1 square ratio
+  aspect-ratio: 1 / 1;
   border-radius: 1rem;
   display: flex;
   align-items: center;
@@ -710,7 +726,7 @@ $ink: #2B1B3D;
   padding: 0.5rem;
   transition: transform 0.1s ease;
   cursor: default;
-  overflow: hidden; // Prevent content expansion from breaking square ratio
+  overflow: hidden;
 
   &.card-clickable {
     cursor: pointer;
@@ -1037,6 +1053,14 @@ $ink: #2B1B3D;
 
 .record-btn {
   background: linear-gradient(135deg, $pink 0%, #C9167F 100%);
+}
+
+.game-over-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-weight: 800;
+  cursor: default;
 }
 
 .rounds-history {
