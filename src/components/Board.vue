@@ -295,15 +295,18 @@ function confirmTheme() {
                     <line x1="186" y1="16" x2="16" y2="86" stroke="#E5484D" stroke-width="7" stroke-linecap="round" />
                   </svg>
                   
-                  <!-- Unified Textarea for both typing & submitted states to preserve exact height -->
+                  <!-- Typing State: Textarea -->
                   <textarea
+                    v-if="!isSubmitted"
                     v-model="words[r * 3 + c]"
                     placeholder="Type word..."
-                    :disabled="isSubmitted"
                     rows="2"
                     class="word-input"
-                    :class="{ 'word-input-submitted': isSubmitted }"
                   />
+                  <!-- Submitted State: Rendered Display (No placeholder) -->
+                  <div v-else class="submitted-word-display">
+                    {{ words[r * 3 + c] }}
+                  </div>
                 </button>
                 
                 <!-- Star Button -->
@@ -651,12 +654,13 @@ $ink: #2B1B3D;
 
 .cell-container {
   position: relative;
+  width: 100%;
 }
 
 .word-card-btn {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 1; // Always lock strict 1:1 square ratio
   border-radius: 1rem;
   display: flex;
   align-items: center;
@@ -664,6 +668,7 @@ $ink: #2B1B3D;
   padding: 0.5rem;
   transition: transform 0.1s ease;
   cursor: default;
+  overflow: hidden; // Prevent content expansion from breaking square ratio
 
   &.card-clickable {
     cursor: pointer;
@@ -733,10 +738,39 @@ $ink: #2B1B3D;
     color: #B7ADC9;
     font-weight: 500;
   }
+}
 
-  &.word-input-submitted {
-    pointer-events: none;
-    user-select: none;
+/* Submitted Full Word View Box */
+.submitted-word-display {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: clamp(11px, 1.4vw, 15px); // Slightly smaller font size so full text fits cleanly without placeholder text
+  line-height: 1.2;
+  color: $ink;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  padding: 0.25rem;
+  user-select: none;
+
+  /* Custom subtle scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(43, 27, 61, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(43, 27, 61, 0.2);
+    border-radius: 4px;
   }
 }
 
