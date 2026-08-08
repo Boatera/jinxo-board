@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Star, RotateCcw, Check, Trophy, Move, Send, Palette } from 'lucide-vue-next';
 import ConfirmModal from './ConfirmModal.vue';
 import ColorSelectModal, { type ThemeOption } from './ColorSelectModal.vue';
 
+const STORAGE_KEY = 'jinxo_board_state';
 const INITIAL_WORDS = Array(9).fill("");
 
 const PINK = "#E01C8E";
@@ -93,7 +94,47 @@ const activeRound = ref<number>(0);
 const showResetModal = ref(false);
 const showNextRoundModal = ref(false);
 const showSubmitModal = ref(false);
-const showColorSelectModal = ref(true); // Open color selector on game start
+const showColorSelectModal = ref(false); // Controlled based on saved session
+
+// Load persisted state on component mount
+onMounted(() => {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    try {
+      const parsed = JSON.parse(savedData);
+      if (parsed.words) words.value = parsed.words;
+      if (parsed.marks) marks.value = parsed.marks;
+      if (parsed.stars) stars.value = parsed.stars;
+      if (parsed.isSubmitted !== undefined) isSubmitted.value = parsed.isSubmitted;
+      if (parsed.rounds) rounds.value = parsed.rounds;
+      if (parsed.activeRound !== undefined) activeRound.value = parsed.activeRound;
+      if (parsed.currentThemeId) currentThemeId.value = parsed.currentThemeId;
+      showColorSelectModal.value = false; // Existing game restored, no color popup
+    } catch (e) {
+      showColorSelectModal.value = true;
+    }
+  } else {
+    showColorSelectModal.value = true; // First time load
+  }
+});
+
+// Watch state changes and save to localStorage
+watch(
+  [words, marks, stars, isSubmitted, rounds, activeRound, currentThemeId],
+  () => {
+    const payload = {
+      words: words.value,
+      marks: marks.value,
+      stars: stars.value,
+      isSubmitted: isSubmitted.value,
+      rounds: rounds.value,
+      activeRound: activeRound.value,
+      currentThemeId: currentThemeId.value,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  },
+  { deep: true }
+);
 
 const totals = computed(() => {
   let cTotal = 0;
@@ -196,9 +237,10 @@ function promptReset() {
   showResetModal.value = true;
 }
 
-// Confirm reset (triggers color picker for the new game)
+// Confirm reset (clears localStorage session & triggers color picker for new game)
 function confirmReset() {
   showResetModal.value = false;
+  localStorage.removeItem(STORAGE_KEY);
   words.value = Array(9).fill('');
   marks.value = Array(9).fill('none');
   stars.value = Array(9).fill(false);
@@ -752,7 +794,7 @@ $ink: #2B1B3D;
   text-align: center;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 700;
-  font-size: clamp(11px, 1.4vw, 15px); // Slightly smaller font size so full text fits cleanly without placeholder text
+  font-size: clamp(11px, 1.4vw, 15px);
   line-height: 1.2;
   color: $ink;
   word-break: break-word;
