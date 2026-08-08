@@ -511,7 +511,7 @@ function confirmTheme() {
     <ConfirmModal
       :is-open="showSubmitModal"
       title="Submit Answers?"
-      message="Submitting will lock your word answers and enable marking (Circle, Cross & Clear)."
+      message="Submitting will lock your word answers and enable marking."
       confirm-text="Submit & Lock Words"
       variant="primary"
       @confirm="confirmSubmit"
