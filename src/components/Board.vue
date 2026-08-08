@@ -295,18 +295,15 @@ function confirmTheme() {
                     <line x1="186" y1="16" x2="16" y2="86" stroke="#E5484D" stroke-width="7" stroke-linecap="round" />
                   </svg>
                   
-                  <!-- Editable Textarea (when NOT submitted) -->
+                  <!-- Unified Textarea for both typing & submitted states to preserve exact height -->
                   <textarea
-                    v-if="!isSubmitted"
                     v-model="words[r * 3 + c]"
                     placeholder="Type word..."
+                    :disabled="isSubmitted"
                     rows="2"
                     class="word-input"
+                    :class="{ 'word-input-submitted': isSubmitted }"
                   />
-                  <!-- Full Rendered Display Box (when submitted) -->
-                  <div v-else class="submitted-word-display">
-                    {{ words[r * 3 + c] }}
-                  </div>
                 </button>
                 
                 <!-- Star Button -->
@@ -665,7 +662,7 @@ $ink: #2B1B3D;
   align-items: center;
   justify-content: center;
   padding: 0.5rem;
-  transition: transform 0.10s ease;
+  transition: transform 0.1s ease;
   cursor: default;
 
   &.card-clickable {
@@ -704,6 +701,7 @@ $ink: #2B1B3D;
   position: relative;
   z-index: 10;
   width: 100%;
+  height: 100%;
   max-height: 85%;
   background: transparent;
   text-align: center;
@@ -735,39 +733,10 @@ $ink: #2B1B3D;
     color: #B7ADC9;
     font-weight: 500;
   }
-}
 
-/* Submitted Full Word View Box */
-.submitted-word-display {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  font-size: clamp(13px, 1.7vw, 18px);
-  line-height: 1.25;
-  color: $ink;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  overflow-y: auto;
-  padding: 0.25rem;
-  user-select: none;
-
-  /* Custom subtle scrollbar */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(43, 27, 61, 0.2) transparent;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(43, 27, 61, 0.2);
-    border-radius: 4px;
+  &.word-input-submitted {
+    pointer-events: none;
+    user-select: none;
   }
 }
 
