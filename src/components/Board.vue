@@ -236,7 +236,8 @@ function confirmRecordRound() {
     // Game Over after Round 3: keep final board state locked
     isSubmitted.value = true;
   } else {
-    // Round 1 & 2: reset marks/answers lock for next round
+    // Round 1 & 2: reset words form, marks, and answers lock for next round
+    words.value = Array(9).fill('');
     marks.value = Array(9).fill('none');
     stars.value = Array(9).fill(false);
     isSubmitted.value = false;
