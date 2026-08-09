@@ -1,59 +1,7 @@
 <script setup lang="ts">
 import { Palette, Check } from 'lucide-vue-next';
-
-export interface ThemeOption {
-  id: string;
-  name: string;
-  gradient: string;
-  border: string;
-  rowBadge: string;
-  rowBadgeText: string;
-  colBadge: string;
-  colBadgeText: string;
-}
-
-const THEMES: ThemeOption[] = [
-  {
-    id: 'green',
-    name: 'Green',
-    gradient: 'linear-gradient(155deg, #2E9B5F 0%, #1E6B40 100%)',
-    border: '#1E6B40',
-    rowBadge: '#E01C8E',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#E01C8E',
-    colBadgeText: '#FFFFFF',
-  },
-  {
-    id: 'red',
-    name: 'Red',
-    gradient: 'linear-gradient(155deg, #E53935 0%, #B71C1C 100%)',
-    border: '#B71C1C',
-    rowBadge: '#3AB4F2',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#E01C8E',
-    colBadgeText: '#FFFFFF',
-  },
-  {
-    id: 'purple',
-    name: 'Purple',
-    gradient: 'linear-gradient(155deg, #7B1FA2 0%, #4A148C 100%)',
-    border: '#E01C8E',
-    rowBadge: '#E01C8E',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#E01C8E',
-    colBadgeText: '#FFFFFF',
-  },
-  {
-    id: 'yellow',
-    name: 'Yellow',
-    gradient: 'linear-gradient(155deg, #FBC02D 0%, #F57F17 100%)',
-    border: '#F57F17',
-    rowBadge: '#E01C8E',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#00ACC1',
-    colBadgeText: '#FFFFFF',
-  },
-];
+import { THEMES, type ThemeOption } from '../config/themes';
+import { MODAL_CONFIGS } from '../config/modals';
 
 interface Props {
   isOpen: boolean;
@@ -62,6 +10,8 @@ interface Props {
 
 defineProps<Props>();
 const emit = defineEmits(['select', 'confirm', 'close']);
+
+const modalCfg = MODAL_CONFIGS.colorSelect;
 </script>
 
 <template>
@@ -69,13 +19,19 @@ const emit = defineEmits(['select', 'confirm', 'close']);
     <div v-if="isOpen" class="modal-backdrop" @click="emit('close')">
       <div class="modal-card" @click.stop>
         <div class="modal-header">
-          <div class="modal-icon">
-            <Palette :size="24" />
+          <div
+            class="modal-icon"
+            :style="{
+              background: modalCfg.iconBg,
+              color: modalCfg.iconColor
+            }"
+          >
+            <component :is="modalCfg.icon || Palette" :size="24" />
           </div>
-          <h3 class="modal-title">Select Player Board</h3>
+          <h3 class="modal-title">{{ modalCfg.title }}</h3>
         </div>
 
-        <p class="modal-message">Choose your board color for this game:</p>
+        <p class="modal-message">{{ modalCfg.message }}</p>
 
         <div class="color-grid">
           <button
@@ -94,7 +50,6 @@ const emit = defineEmits(['select', 'confirm', 'close']);
                 <div class="mini-cell" />
               </div>
             </div>
-            <span class="color-name">{{ t.name }}</span>
             <div v-if="selectedThemeId === t.id" class="check-badge" :style="{ background: '#E01C8E' }">
               <Check :size="14" color="white" />
             </div>
@@ -102,8 +57,15 @@ const emit = defineEmits(['select', 'confirm', 'close']);
         </div>
 
         <div class="modal-actions">
-          <button class="btn btn-confirm" @click="emit('confirm')">
-            Start Game
+          <button
+            class="btn btn-confirm"
+            :style="{
+              background: modalCfg.confirmBtnBg,
+              color: modalCfg.confirmBtnColor
+            }"
+            @click="emit('confirm')"
+          >
+            {{ modalCfg.confirmText || 'Start Game' }}
           </button>
         </div>
       </div>
@@ -175,7 +137,7 @@ $ink: #2B1B3D;
 
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.875rem;
   margin-bottom: 1.5rem;
 }
@@ -188,6 +150,7 @@ $ink: #2B1B3D;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -226,14 +189,6 @@ $ink: #2B1B3D;
 .mini-cell {
   background: $cream;
   border-radius: 0.25rem;
-}
-
-.color-name {
-  color: white;
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  font-size: 0.875rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .check-badge {

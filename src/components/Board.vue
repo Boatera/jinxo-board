@@ -2,7 +2,9 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { Star, RotateCcw, Check, Trophy, Move, Send, Palette, Flag } from 'lucide-vue-next';
 import ConfirmModal from './ConfirmModal.vue';
-import ColorSelectModal, { type ThemeOption } from './ColorSelectModal.vue';
+import ColorSelectModal from './ColorSelectModal.vue';
+import { THEMES, type ThemeOption } from '../config/themes';
+import { MODAL_CONFIGS } from '../config/modals';
 
 const STORAGE_KEY = 'jinxo_board_state';
 const INITIAL_WORDS = Array(9).fill("");
@@ -12,49 +14,7 @@ const ORANGE = "#F5A623";
 const GREEN = "#2FBF88";
 const INK = "#2B1B3D";
 
-// 4 official physical player board color themes matching the reference board images
-const THEMES: ThemeOption[] = [
-  {
-    id: 'green',
-    name: 'Green',
-    gradient: 'linear-gradient(155deg, #2E9B5F 0%, #1E6B40 100%)',
-    border: '#1E6B40',
-    rowBadge: '#E01C8E',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#E01C8E',
-    colBadgeText: '#FFFFFF',
-  },
-  {
-    id: 'red',
-    name: 'Red',
-    gradient: 'linear-gradient(155deg, #E53935 0%, #B71C1C 100%)',
-    border: '#B71C1C',
-    rowBadge: '#3AB4F2',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#E01C8E',
-    colBadgeText: '#FFFFFF',
-  },
-  {
-    id: 'purple',
-    name: 'Purple',
-    gradient: 'linear-gradient(155deg, #7B1FA2 0%, #4A148C 100%)',
-    border: '#E01C8E',
-    rowBadge: '#E01C8E',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#E01C8E',
-    colBadgeText: '#FFFFFF',
-  },
-  {
-    id: 'yellow',
-    name: 'Yellow',
-    gradient: 'linear-gradient(155deg, #FBC02D 0%, #F57F17 100%)',
-    border: '#F57F17',
-    rowBadge: '#E01C8E',
-    rowBadgeText: '#FFFFFF',
-    colBadge: '#00ACC1',
-    colBadgeText: '#FFFFFF',
-  },
-];
+
 
 const currentThemeId = ref<string>('purple');
 const currentTheme = computed(() => {
@@ -383,8 +343,8 @@ function confirmTheme() {
                 <div
                   class="point-pill row-pill"
                   :style="{
-                    background: currentTheme.rowBadge,
-                    color: currentTheme.rowBadgeText
+                    background: '#E01C8E',
+                    color: '#FFFFFF'
                   }"
                 >
                   {{ rowPoints[r] }}
@@ -399,8 +359,8 @@ function confirmTheme() {
               <div
                 class="point-pill col-pill"
                 :style="{
-                  background: currentTheme.colBadge,
-                  color: currentTheme.colBadgeText
+                  background: '#E01C8E',
+                  color: '#FFFFFF'
                 }"
               >
                 {{ val }}
@@ -897,7 +857,7 @@ $ink: #2B1B3D;
   }
 }
 
-/* Clean flat circular badges matching physical board template */
+/* Clean circular badges matching physical board template */
 .point-pill {
   width: 2.25rem;
   height: 2.25rem;
@@ -911,7 +871,7 @@ $ink: #2B1B3D;
   box-shadow: none;
   user-select: none;
   transition: background 0.3s ease, color 0.3s ease;
-  border: none;
+  border: 3px solid #2B1B3D;
 
   @media (min-width: 640px) {
     width: 2.75rem;
@@ -928,8 +888,8 @@ $ink: #2B1B3D;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(0, 0, 0, 0.1);
 
   @media (min-width: 1024px) {
     width: 14rem;
@@ -1047,7 +1007,7 @@ $ink: #2B1B3D;
 
 .submit-btn {
   background: linear-gradient(135deg, $orange 0%, #E69516 100%);
-  border: 2px solid #FFAE33;
+  border: none;
   color: $ink;
   font-weight: 800;
 }

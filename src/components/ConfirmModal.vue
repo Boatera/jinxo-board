@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { AlertCircle, HelpCircle } from 'lucide-vue-next';
+import type { Component } from 'vue';
+import { HelpCircle } from 'lucide-vue-next';
 
 interface Props {
   isOpen: boolean;
@@ -7,10 +8,17 @@ interface Props {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'primary';
+  variant?: 'primary' | 'danger';
+  icon?: Component;
+  iconBg?: string;
+  iconColor?: string;
+  confirmBtnBg?: string;
+  confirmBtnColor?: string;
+  cancelBtnBg?: string;
+  cancelBtnColor?: string;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   confirmText: 'Confirm',
   cancelText: 'Cancel',
   variant: 'primary',
@@ -24,9 +32,15 @@ const emit = defineEmits(['confirm', 'cancel']);
     <div v-if="isOpen" class="modal-backdrop" @click="emit('cancel')">
       <div class="modal-card" @click.stop>
         <div class="modal-header">
-          <div class="modal-icon" :class="`icon-${variant}`">
-            <AlertCircle v-if="variant === 'danger'" :size="24" />
-            <HelpCircle v-else :size="24" />
+          <div
+            class="modal-icon"
+            :class="variant === 'danger' ? 'icon-danger' : 'icon-primary'"
+            :style="{
+              background: iconBg,
+              color: iconColor
+            }"
+          >
+            <component :is="icon || HelpCircle" :size="24" />
           </div>
           <h3 class="modal-title">{{ title }}</h3>
         </div>
@@ -34,12 +48,23 @@ const emit = defineEmits(['confirm', 'cancel']);
         <p class="modal-message">{{ message }}</p>
 
         <div class="modal-actions">
-          <button class="btn btn-cancel" @click="emit('cancel')">
+          <button
+            class="btn btn-cancel"
+            :style="{
+              background: cancelBtnBg,
+              color: cancelBtnColor
+            }"
+            @click="emit('cancel')"
+          >
             {{ cancelText }}
           </button>
           <button
-            class="btn btn-confirm"
-            :class="`btn-${variant}`"
+            class="btn"
+            :class="variant === 'danger' ? 'btn-danger' : 'btn-primary'"
+            :style="{
+              background: confirmBtnBg,
+              color: confirmBtnColor
+            }"
             @click="emit('confirm')"
           >
             {{ confirmText }}
@@ -51,7 +76,6 @@ const emit = defineEmits(['confirm', 'cancel']);
 </template>
 
 <style lang="scss" scoped>
-$purple-dark: #3A1F5E;
 $pink: #E01C8E;
 $cream: #FBF8F1;
 $ink: #2B1B3D;
@@ -64,8 +88,8 @@ $ink: #2B1B3D;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(15, 8, 28, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 8, 28, 0.75);
+  backdrop-filter: blur(5px);
 }
 
 .modal-card {
@@ -95,16 +119,16 @@ $ink: #2B1B3D;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
 
-  &.icon-primary {
-    background: #EAFBF3;
-    color: #2FBF88;
-  }
+.icon-primary {
+  background: #FCE6F3;
+  color: $pink;
+}
 
-  &.icon-danger {
-    background: #FDECEC;
-    color: #E5484D;
-  }
+.icon-danger {
+  background: #FDECEC;
+  color: #E5484D;
 }
 
 .modal-title {
@@ -118,8 +142,8 @@ $ink: #2B1B3D;
 .modal-message {
   font-size: 0.9375rem;
   color: #4A3E56;
-  margin: 0 0 1.5rem 0;
   line-height: 1.4;
+  margin: 0 0 1.5rem 0;
 }
 
 .modal-actions {
@@ -132,37 +156,41 @@ $ink: #2B1B3D;
 .btn {
   border: none;
   border-radius: 9999px;
-  padding: 0.5rem 1.25rem;
+  padding: 0.625rem 1.25rem;
   font-family: 'Nunito', sans-serif;
   font-weight: 800;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, background 0.2s ease;
 
   &:hover {
-    transform: scale(1.04);
+    transform: scale(1.03);
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
 }
 
 .btn-cancel {
-  background: #E6E0F0;
-  color: #5C4D73;
+  background: #EFEAE1;
+  color: #5C4E6B;
+
+  &:hover {
+    background: #E5DFD3;
+  }
 }
 
-.btn-confirm {
+.btn-primary {
+  background: linear-gradient(135deg, $pink 0%, #C9167F 100%);
   color: white;
+  box-shadow: 0 4px 12px rgba(224, 28, 142, 0.35);
+}
 
-  &.btn-primary {
-    background: $pink;
-  }
-
-  &.btn-danger {
-    background: #E5484D;
-  }
+.btn-danger {
+  background: linear-gradient(135deg, #E5484D 0%, #C92A2E 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(229, 72, 77, 0.35);
 }
 
 .modal-fade-enter-active,
